@@ -5,7 +5,7 @@ PROJECT_DIR := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 fmt: fmt-rs fmt-nix
 
 fmt-rs:
-	rustfmt $$(find ${PROJECT_DIR} -name '*.rs')
+	rustfmt $$(find ${PROJECT_DIR} -type f -name '*.rs')
 
 fmt-nix:
-	nixfmt $$(find ${PROJECT_DIR} -name '*.nix')
+	nixfmt $$(find ${PROJECT_DIR} -type f -name '*.nix')
