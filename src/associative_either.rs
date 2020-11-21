@@ -1,6 +1,6 @@
-use super::{core::*, hkt::*};
+use super::{data::*, hkt::*};
 
-trait AssociativeEither<'a>: Hkt<'a> {
+pub trait AssociativeEither<'a>: Hkt<'a> {
     fn either<A: 'a, B: 'a>(
         fa: Self::Member<A>,
         fb: Self::Member<B>,

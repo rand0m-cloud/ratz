@@ -1,4 +1,4 @@
-use super::{associative_flatten::*, covariant::*, hkt::*};
+use crate::{associative_flatten::*, covariant::*, hkt::*};
 
 pub trait Monad<'a>: AssociativeFlatten<'a> + Covariant<'a> {
     fn flat_map<A: 'a, B: 'a, F: FnMut(A) -> Self::Member<B> + 'a>(
