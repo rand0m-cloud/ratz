@@ -1,4 +1,4 @@
-use super::{covariant::Covariant, family::*, identity_both::IdentityBoth};
+use super::{core::*, covariant::Covariant, identity_both::IdentityBoth};
 
 trait Traversable<'a>: Covariant<'a> {
     fn foreach<

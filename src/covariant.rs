@@ -1,5 +1,5 @@
-use super::family::*;
-pub trait Covariant<'a>: Family<'a> {
+use super::{core::*, hkt::*};
+pub trait Covariant<'a>: Hkt<'a> {
     fn map<A: 'a, B: 'a, F: FnMut(A) -> B + 'a>(
         fa: Self::Member<A>,
         f: F,

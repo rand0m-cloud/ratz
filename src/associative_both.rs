@@ -1,5 +1,5 @@
-use super::family::Family;
-pub trait AssociativeBoth<'a>: Family<'a> {
+use super::hkt::Hkt;
+pub trait AssociativeBoth<'a>: Hkt<'a> {
     fn both<A: 'a, B: 'a>(
         fa: Self::Member<A>,
         fb: Self::Member<B>,

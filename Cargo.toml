@@ -1,6 +1,6 @@
 [package]
-name = "cata"
-version = "0.1.0"
+name = "ratz"
+version = "0.0.1"
 authors = ["Maxim Schuwalow <maxim.schuwalow@gmail.com>"]
 edition = "2018"
 

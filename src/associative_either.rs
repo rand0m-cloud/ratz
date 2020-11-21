@@ -1,6 +1,6 @@
-use super::{core::*, family::*};
+use super::{core::*, hkt::*};
 
-trait AssociativeEither<'a>: Family<'a> {
+trait AssociativeEither<'a>: Hkt<'a> {
     fn either<A: 'a, B: 'a>(
         fa: Self::Member<A>,
         fb: Self::Member<B>,

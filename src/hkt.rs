@@ -1,15 +1,15 @@
-use std::marker::PhantomData;
-pub trait Family<'a> {
+use super::core::*;
+
+pub trait Hkt<'a> {
     type Member<T: 'a>: Mirror<'a, T = T, Family = Self>;
 }
 pub trait Mirror<'a>: Sized + 'a {
     type T: 'a;
-    type Family: Family<'a>;
-    fn as_member(self) -> <Self::Family as Family<'a>>::Member<Self::T>;
+    type Family: Hkt<'a>;
+    fn as_member(self) -> <Self::Family as Hkt<'a>>::Member<Self::T>;
 }
 
-pub struct OptionFamily;
-impl<'a> Family<'a> for OptionFamily {
+impl<'a> Hkt<'a> for OptionFamily {
     type Member<T: 'a> = Option<T>;
 }
 impl<'a, A: 'a> Mirror<'a> for Option<A> {
@@ -21,8 +21,7 @@ impl<'a, A: 'a> Mirror<'a> for Option<A> {
     }
 }
 
-pub struct VectorFamily;
-impl<'a> Family<'a> for VectorFamily {
+impl<'a> Hkt<'a> for VectorFamily {
     type Member<T: 'a> = Vec<T>;
 }
 impl<'a, A: 'a> Mirror<'a> for Vec<A> {
@@ -34,10 +33,7 @@ impl<'a, A: 'a> Mirror<'a> for Vec<A> {
     }
 }
 
-pub struct ResultFamily<'a, E: 'a> {
-    phantom: PhantomData<&'a E>,
-}
-impl<'a, E: 'a> Family<'a> for ResultFamily<'a, E> {
+impl<'a, E: 'a> Hkt<'a> for ResultFamily<'a, E> {
     type Member<T: 'a> = Result<T, E>;
 }
 impl<'a, A: 'a, E: 'a> Mirror<'a> for Result<A, E> {
