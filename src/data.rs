@@ -44,8 +44,8 @@ impl<'a, L: 'a> AssociativeFlatten<'a> for EitherFamily<'a, L> {
 }
 // impl<'a, L: Clone + 'a> AssociativeBoth<'a> for EitherFamily<'a, L> {
 //     fn both<A: 'a, B: 'a>(
-//         mut fa: Either<L, A>,
-//         mut fb: Either<L, B>,
+//         fa: Either<L, A>,
+//         fb: Either<L, B>,
 //     ) -> Either<L, (A, B)> {
 //         fa.flat_map(move |a| fb.map(move |b| (a, b)))
 //     }
