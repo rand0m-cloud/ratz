@@ -1,24 +1,24 @@
 use super::{covariant::Covariant, hkt::*, identity_both::IdentityBoth};
 
-pub trait Traversable<'a>: Covariant<'a> {
+pub trait Traversable: Covariant {
     fn foreach<
-        G: IdentityBoth<'a> + Covariant<'a>,
-        A: 'a,
-        B: 'a,
-        F: FnMut(A) -> G::Member<B> + 'a,
+        'b,
+        App: IdentityBoth + Covariant,
+        A,
+        B: 'b,
+        F: FnMut(A) -> App::Member<B> + 'b,
     >(
         fa: Self::Member<A>,
         f: F,
-    ) -> G::Member<Self::Member<B>>;
+    ) -> App::Member<Self::Member<B>>;
 }
 
-pub trait TraverseSyntax<'a, Tr: Traversable<'a>>:
-    Mirror<'a, Family = Tr>
-{
+pub trait TraverseSyntax<Tr: Traversable>: Mirror<Family = Tr> {
     fn traverse<
-        App: IdentityBoth<'a> + Covariant<'a>,
-        AppB: Mirror<'a, Family = App>,
-        F: FnMut(Self::T) -> AppB + 'a,
+        'b,
+        App: IdentityBoth + Covariant,
+        AppB: Mirror<Family = App>,
+        F: FnMut(Self::T) -> AppB + 'b,
     >(
         self,
         mut f: F,
@@ -26,28 +26,23 @@ pub trait TraverseSyntax<'a, Tr: Traversable<'a>>:
         Tr::foreach::<App, _, _, _>(self.as_member(), move |t| f(t).as_member())
     }
 }
-impl<'a, F: Traversable<'a>, T: Mirror<'a, Family = F>> TraverseSyntax<'a, F>
-    for T
-{
-}
+impl<F: Traversable, T: Mirror<Family = F>> TraverseSyntax<F> for T {}
 
 pub trait SequenceSyntax<
-    'a,
-    App: IdentityBoth<'a> + Covariant<'a>,
-    Tr: Traversable<'a>,
-    AppA: Mirror<'a, Family = App>,
->: Mirror<'a, T = AppA, Family = Tr> + Sized
+    App: IdentityBoth + Covariant,
+    Tr: Traversable,
+    AppA: Mirror<Family = App>,
+>: Mirror<T = AppA, Family = Tr>
 {
     fn sequence(self) -> App::Member<Tr::Member<AppA::T>> {
-        self.traverse(|x| x)
+        self.traverse(move |x| x)
     }
 }
 impl<
-        'a,
-        App: IdentityBoth<'a> + Covariant<'a>,
-        Tr: Traversable<'a>,
-        AppA: Mirror<'a, Family = App>,
-        TrAppA: Mirror<'a, T = AppA, Family = Tr>,
-    > SequenceSyntax<'a, App, Tr, AppA> for TrAppA
+        App: IdentityBoth + Covariant,
+        Tr: Traversable,
+        AppA: Mirror<Family = App>,
+        TrAppA: Mirror<T = AppA, Family = Tr>,
+    > SequenceSyntax<App, Tr, AppA> for TrAppA
 {
 }

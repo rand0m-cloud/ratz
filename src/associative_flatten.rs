@@ -1,5 +1,7 @@
 use super::hkt::*;
 
-pub trait AssociativeFlatten<'a>: Hkt<'a> {
-    fn flatten<A: 'a>(ffa: Self::Member<Self::Member<A>>) -> Self::Member<A>;
+pub trait AssociativeFlatten: Hkt {
+    fn flatten<'a, A: 'a>(
+        ffa: Self::Member<Self::Member<A>>,
+    ) -> Self::Member<A>;
 }

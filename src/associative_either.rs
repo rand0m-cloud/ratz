@@ -1,8 +1,8 @@
 use super::{data::*, hkt::*};
 
-pub trait AssociativeEither<'a>: Hkt<'a> {
-    fn either<A: 'a, B: 'a>(
-        fa: Self::Member<A>,
-        fb: Self::Member<B>,
-    ) -> Self::Member<Either<A, B>>;
+pub trait AssociativeEither: Hkt {
+    fn either<'a, A: 'a, B: 'a>(
+        fa: Self::Member<'a, A>,
+        fb: Self::Member<'a, B>,
+    ) -> Self::Member<'a, Either<A, B>>;
 }

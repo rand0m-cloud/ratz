@@ -1,16 +1,18 @@
 use super::right_covariant::*;
 
-pub trait BiFunctor<'a>: RightCovariant<'a> {
+pub trait BiFunctor<'family>: RightCovariant<'family> {
     fn bimap<
-        A: 'a,
-        B: 'a,
-        C: 'a,
-        D: 'a,
-        F: FnMut(A) -> C + 'a,
-        G: FnMut(B) -> D + 'a,
+        'i,
+        'o,
+        A: 'i,
+        B: 'i,
+        C: 'o,
+        D: 'o,
+        F: FnMut(A) -> C + 'o,
+        G: FnMut(B) -> D + 'o,
     >(
-        ab: Self::Member<A, B>,
+        ab: Self::Member<'i, A, B>,
         f: F,
         g: G,
-    ) -> Self::Member<C, D>;
+    ) -> Self::Member<'o, C, D>;
 }

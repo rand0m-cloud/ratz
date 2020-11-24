@@ -5,7 +5,7 @@ use super::associative_flatten::*;
 /// For example, with a list we can always vacuously add a layer by wrapping a
 /// list in another list constructor and flattening the resulting list always
 /// returns the original list unchanged.
-pub trait IdentityFlatten<'a>: AssociativeFlatten<'a> {
+pub trait IdentityFlatten: AssociativeFlatten {
     /// The identity element.
-    fn any() -> Self::Member<()>;
+    fn any() -> Self::Member<'static, ()>;
 }

@@ -1,21 +1,32 @@
-pub trait Hkt<'a> {
-    type Member<T: 'a>: Mirror<'a, T = T, Family = Self>;
+pub trait Hkt {
+    type Member<T>: Mirror<T = T, Family = Self>;
 }
 
-pub trait Mirror<'a>: Sized + 'a {
-    type T: 'a;
-    type Family: Hkt<'a>;
-    fn as_member(self) -> <Self::Family as Hkt<'a>>::Member<Self::T>;
-    fn as_member_(&self) -> &<Self::Family as Hkt<'a>>::Member<Self::T>;
+pub trait Mirror: Sized {
+    type T;
+    type Family: Hkt;
+    fn as_member(self) -> <Self::Family as Hkt>::Member<Self::T>;
+    fn as_member_(&self) -> &<Self::Family as Hkt>::Member<Self::T>;
 }
 
-pub trait Hkt2<'a> {
-    type Member<A: 'a, B: 'a>: Mirror2<'a, A = A, B = B, Family = Self>;
+pub trait Hkt2<'family> {
+    type Member<'member, A: 'member, B: 'member>: Mirror2<
+        'family,
+        'member,
+        A = A,
+        B = B,
+        Family = Self,
+    >;
 }
 
-pub trait Mirror2<'a>: Sized + 'a {
-    type A: 'a;
-    type B: 'a;
-    type Family: Hkt2<'a>;
-    fn as_member(self) -> <Self::Family as Hkt2<'a>>::Member<Self::A, Self::B>;
+pub trait Mirror2<'member, 'family>: Sized + 'member + 'family {
+    type A: 'member;
+    type B: 'member;
+    type Family: Hkt2<'family>;
+    fn as_member(
+        self,
+    ) -> <Self::Family as Hkt2<'family>>::Member<'member, Self::A, Self::B>;
+    fn as_member_(
+        &self,
+    ) -> &<Self::Family as Hkt2<'family>>::Member<'member, Self::A, Self::B>;
 }

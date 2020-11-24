@@ -1,5 +1,5 @@
 use super::associative_both::AssociativeBoth;
 
-pub trait IdentityBoth<'a>: AssociativeBoth<'a> {
+pub trait IdentityBoth: AssociativeBoth {
     fn any() -> Self::Member<()>;
 }
