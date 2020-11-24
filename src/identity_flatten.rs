@@ -7,5 +7,5 @@ use super::associative_flatten::*;
 /// returns the original list unchanged.
 pub trait IdentityFlatten: AssociativeFlatten {
     /// The identity element.
-    fn any() -> Self::Member<'static, ()>;
+    fn any() -> Self::Member<()>;
 }

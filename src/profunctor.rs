@@ -1,18 +1,17 @@
 use super::right_covariant::*;
 
-pub trait Profunctor<'family>: RightCovariant<'family> {
+pub trait Profunctor: RightCovariant {
     fn dimap<
-        'input,
         'output,
-        A: 'input,
-        B: 'input,
+        A: 'static,
+        B: 'static,
         C: 'output,
         D: 'output,
-        F: FnMut(C) -> A + 'output,
-        G: FnMut(B) -> D + 'output,
+        F: FnMut(C) -> A + 'static,
+        G: FnMut(B) -> D + 'static,
     >(
-        ab: Self::Member<'input, A, B>,
+        ab: Self::Member<A, B>,
         f: F,
         g: G,
-    ) -> Self::Member<'output, C, D>;
+    ) -> Self::Member<C, D>;
 }

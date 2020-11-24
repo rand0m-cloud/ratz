@@ -1,48 +1,54 @@
-use super::{covariant::Covariant, hkt::*, identity_both::IdentityBoth};
+use super::{covariant::*, derived::applicative::*, hkt::*};
 
 pub trait Traversable: Covariant {
     fn foreach<
-        'b,
-        App: IdentityBoth + Covariant,
-        A,
-        B: 'b,
-        F: FnMut(A) -> App::Member<B> + 'b,
+        App: Applicative,
+        A: 'static,
+        B: Clone + 'static,
+        F: FnMut(A) -> App::Member<B> + 'static,
     >(
         fa: Self::Member<A>,
         f: F,
     ) -> App::Member<Self::Member<B>>;
 }
 
-pub trait TraverseSyntax<Tr: Traversable>: Mirror<Family = Tr> {
+pub trait TraverseSyntax<Tr: Traversable, A: 'static>:
+    Mirror<Family = Tr, T = A>
+{
     fn traverse<
-        'b,
-        App: IdentityBoth + Covariant,
-        AppB: Mirror<Family = App>,
-        F: FnMut(Self::T) -> AppB + 'b,
+        App: Applicative,
+        B: Clone + 'static,
+        AppB: Mirror<Family = App, T = B>,
+        F: FnMut(Self::T) -> AppB + 'static,
     >(
         self,
         mut f: F,
-    ) -> App::Member<Tr::Member<AppB::T>> {
+    ) -> App::Member<Tr::Member<B>> {
         Tr::foreach::<App, _, _, _>(self.as_member(), move |t| f(t).as_member())
     }
 }
-impl<F: Traversable, T: Mirror<Family = F>> TraverseSyntax<F> for T {}
+impl<F: Traversable, A: 'static, T: Mirror<Family = F, T = A>>
+    TraverseSyntax<F, A> for T
+{
+}
 
 pub trait SequenceSyntax<
-    App: IdentityBoth + Covariant,
+    App: Applicative,
     Tr: Traversable,
-    AppA: Mirror<Family = App>,
->: Mirror<T = AppA, Family = Tr>
+    A: Clone + 'static,
+    AppA: Mirror<Family = App, T = A> + 'static,
+>: Mirror<Family = Tr, T = AppA>
 {
-    fn sequence(self) -> App::Member<Tr::Member<AppA::T>> {
+    fn sequence(self) -> App::Member<Tr::Member<A>> {
         self.traverse(move |x| x)
     }
 }
 impl<
-        App: IdentityBoth + Covariant,
+        App: Applicative,
         Tr: Traversable,
-        AppA: Mirror<Family = App>,
-        TrAppA: Mirror<T = AppA, Family = Tr>,
-    > SequenceSyntax<App, Tr, AppA> for TrAppA
+        A: Clone + 'static,
+        AppA: Mirror<Family = App, T = A> + 'static,
+        TrAppA: Mirror<Family = Tr, T = AppA>,
+    > SequenceSyntax<App, Tr, A, AppA> for TrAppA
 {
 }

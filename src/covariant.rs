@@ -1,32 +1,34 @@
 use super::hkt::*;
 pub trait Covariant: Hkt {
-    fn map<'a, A: 'a, B: 'a, F: FnMut(A) -> B + 'a>(
+    fn map<A: 'static, B, F: FnMut(A) -> B + 'static>(
         fa: Self::Member<A>,
         f: F,
     ) -> Self::Member<B>;
 }
 pub trait CovariantClone: Covariant {
-    fn map_<'a, A: 'a, B: 'a, F: FnMut(&A) -> B + 'a>(
+    fn map_<A: 'static, B, F: FnMut(&A) -> B + 'static>(
         fa: &Self::Member<A>,
         f: F,
     ) -> Self::Member<B>;
 }
 
-pub trait CovariantSyntax<Cov: Covariant>: Mirror<Family = Cov> {
-    fn map<'a, B: 'a, F: FnMut(Self::T) -> B + 'a>(
-        self,
-        f: F,
-    ) -> Cov::Member<B> {
+pub trait CovariantSyntax<Cov: Covariant, A: 'static>:
+    Mirror<T = A, Family = Cov>
+{
+    fn map<B, F: FnMut(Self::T) -> B + 'static>(self, f: F) -> Cov::Member<B> {
         Cov::map(self.as_member(), f)
     }
 }
 
-impl<F: Covariant, T: Mirror<Family = F>> CovariantSyntax<F> for T {}
-
-pub trait CovariantCloneSyntax<Cov: CovariantClone>:
-    Mirror<Family = Cov>
+impl<F: Covariant, A: 'static, T: Mirror<T = A, Family = F>>
+    CovariantSyntax<F, A> for T
 {
-    fn map_<'a, B: 'a, F: FnMut(&Self::T) -> B + 'a>(
+}
+
+pub trait CovariantCloneSyntax<Cov: CovariantClone, A: 'static>:
+    Mirror<T = A, Family = Cov>
+{
+    fn map_<B, F: FnMut(&Self::T) -> B + 'static>(
         &self,
         f: F,
     ) -> Cov::Member<B> {
@@ -34,7 +36,7 @@ pub trait CovariantCloneSyntax<Cov: CovariantClone>:
     }
 }
 
-impl<'t, F: CovariantClone, T: Mirror<Family = F>> CovariantCloneSyntax<F>
-    for T
+impl<F: CovariantClone, A: 'static, T: Mirror<T = A, Family = F>>
+    CovariantCloneSyntax<F, A> for T
 {
 }
