@@ -22,6 +22,10 @@ impl<'a, A: 'a, B: 'a> Mirror<'a> for Either<A, B> {
     fn as_member(self) -> <Self::Family as Hkt<'a>>::Member<Self::T> {
         self
     }
+
+    fn as_member_(&self) -> &<Self::Family as Hkt<'a>>::Member<Self::T> {
+        self
+    }
 }
 impl<'a, L: 'a> Covariant<'a> for EitherFamily<'a, L> {
     fn map<A: 'a, B: 'a, F: FnMut(A) -> B + 'a>(
@@ -30,6 +34,17 @@ impl<'a, L: 'a> Covariant<'a> for EitherFamily<'a, L> {
     ) -> Self::Member<B> {
         match fa {
             Either::Left(a) => Either::Left(a),
+            Either::Right(b) => Either::Right(f(b)),
+        }
+    }
+}
+impl<'a, L: Clone + 'a> CovariantClone<'a> for EitherFamily<'a, L> {
+    fn map_<A: 'a, B: 'a, F: FnMut(&A) -> B + 'a>(
+        fa: &Either<L, A>,
+        mut f: F,
+    ) -> Either<L, B> {
+        match fa {
+            Either::Left(a) => Either::Left(a.clone()),
             Either::Right(b) => Either::Right(f(b)),
         }
     }

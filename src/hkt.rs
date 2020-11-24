@@ -6,6 +6,7 @@ pub trait Mirror<'a>: Sized + 'a {
     type T: 'a;
     type Family: Hkt<'a>;
     fn as_member(self) -> <Self::Family as Hkt<'a>>::Member<Self::T>;
+    fn as_member_(&self) -> &<Self::Family as Hkt<'a>>::Member<Self::T>;
 }
 
 pub trait Hkt2<'a> {
