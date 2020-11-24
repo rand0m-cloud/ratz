@@ -1,15 +1,7 @@
 use super::right_covariant::*;
 
 pub trait BiFunctor: RightCovariant {
-    fn bimap<
-        'output,
-        A: 'static,
-        B: 'static,
-        C: 'output,
-        D: 'output,
-        F: FnMut(A) -> C + 'static,
-        G: FnMut(B) -> D + 'static,
-    >(
+    fn bimap<A, B, C, D, F: FnMut(A) -> C, G: FnMut(B) -> D>(
         ab: Self::Member<A, B>,
         f: F,
         g: G,

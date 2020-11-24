@@ -56,88 +56,19 @@ impl AssociativeBoth for VectorFamily {
     }
 }
 impl Traversable for VectorFamily {
-    fn foreach<
-        App: Applicative,
-        A: 'static,
-        B: Clone + 'static,
-        F: FnMut(A) -> App::Member<B>,
-    >(
+    fn foreach<App: Applicative, A, B: Clone, F: FnMut(A) -> App::Member<B>>(
         fa: Self::Member<A>,
         mut f: F,
     ) -> App::Member<Self::Member<B>> {
-        let acc: Vec<B> = Vec::new();
-        let init = App::pure(acc);
+        let init = App::pure(Vec::new());
         let result = fa.into_iter().fold(init, move |app_acc, a| {
             let app_b = f(a);
-            App::both(app_acc, app_b).map(move |(mut acc, b)| {
+            App::both(app_acc, app_b).map(|(mut acc, b)| {
                 acc.push(b);
                 acc
             })
         });
         result
-    }
-}
-
-// iterator
-impl<T> Mirror for Box<dyn Iterator<Item = T>> {
-    type Family = IteratorBoxFamily;
-    type T = T;
-
-    fn as_member(self) -> <Self::Family as Hkt>::Member<Self::T> {
-        self
-    }
-
-    fn as_member_(&self) -> &<Self::Family as Hkt>::Member<Self::T> {
-        self
-    }
-}
-pub struct IteratorBoxFamily;
-impl Hkt for IteratorBoxFamily {
-    type Member<T> = Box<dyn Iterator<Item = T>>;
-}
-impl Covariant for IteratorBoxFamily {
-    fn map<A: 'static, B, F: FnMut(A) -> B + 'static>(
-        fa: Box<dyn Iterator<Item = A>>,
-        f: F,
-    ) -> Box<dyn Iterator<Item = B>> {
-        box Iterator::map(fa, f)
-    }
-}
-impl AssociativeFlatten for IteratorBoxFamily {
-    fn flatten<A: 'static>(
-        ffa: Self::Member<Self::Member<A>>,
-    ) -> Self::Member<A> {
-        box Iterator::flatten(ffa)
-    }
-}
-impl AssociativeBoth for IteratorBoxFamily {
-    fn both<A: 'static, B: 'static>(
-        fa: Self::Member<A>,
-        fb: Self::Member<B>,
-    ) -> Self::Member<(A, B)> {
-        box Iterator::zip(fa, fb)
-    }
-}
-impl Traversable for IteratorBoxFamily {
-    fn foreach<
-        App: Applicative,
-        A: 'static,
-        B: Clone + 'static,
-        F: FnMut(A) -> App::Member<B> + 'static,
-    >(
-        fa: Self::Member<A>,
-        mut f: F,
-    ) -> App::Member<Self::Member<B>> {
-        let acc: Vec<B> = Vec::new();
-        let init = App::pure(acc);
-        let result = fa.fold(init, move |app_acc, a| {
-            let app_b = f(a);
-            App::both(app_acc, app_b).map(move |(mut acc, b)| {
-                acc.push(b);
-                acc
-            })
-        });
-        result.map(|v| (box v.into_iter()) as Box<dyn Iterator<Item = B>>)
     }
 }
 
@@ -216,7 +147,7 @@ impl<L> AssociativeBoth for EitherFamily<L> {
     }
 }
 impl<L> AssociativeEither for EitherFamily<L> {
-    fn either<A: 'static, B: 'static>(
+    fn either<A, B>(
         fa: Either<L, A>,
         fb: Either<L, B>,
     ) -> Either<L, Either<A, B>> {
@@ -232,13 +163,8 @@ impl<L> IdentityBoth for EitherFamily<L> {
         Either::Right(())
     }
 }
-impl<L: Clone + 'static> Traversable for EitherFamily<L> {
-    fn foreach<
-        App: Applicative,
-        A,
-        B: 'static,
-        F: FnMut(A) -> App::Member<B>,
-    >(
+impl<L: Clone> Traversable for EitherFamily<L> {
+    fn foreach<App: Applicative, A, B, F: FnMut(A) -> App::Member<B>>(
         fa: Self::Member<A>,
         mut f: F,
     ) -> App::Member<Self::Member<B>> {
@@ -252,13 +178,7 @@ impl Hkt2 for EitherFamily2 {
     type Member<A, B> = Either<A, B>;
 }
 impl RightCovariant for EitherFamily2 {
-    fn right_map<
-        'c,
-        A: 'static,
-        B: 'static,
-        C: 'c,
-        F: FnMut(B) -> C + 'static,
-    >(
+    fn right_map<A, B, C, F: FnMut(B) -> C>(
         ab: Self::Member<A, B>,
         f: F,
     ) -> Self::Member<A, C> {
@@ -266,15 +186,7 @@ impl RightCovariant for EitherFamily2 {
     }
 }
 impl BiFunctor for EitherFamily2 {
-    fn bimap<
-        'output,
-        A: 'static,
-        B: 'static,
-        C: 'output,
-        D: 'output,
-        F: FnMut(A) -> C + 'static,
-        G: FnMut(B) -> D + 'static,
-    >(
+    fn bimap<A, B, C, D, F: FnMut(A) -> C, G: FnMut(B) -> D>(
         ab: Self::Member<A, B>,
         mut f: F,
         mut g: G,
@@ -284,14 +196,6 @@ impl BiFunctor for EitherFamily2 {
             Either::Right(r) => Either::Right(g(r)),
         }
     }
-}
-
-// examples
-fn iter_either_traverse(
-) -> Either<i32, Box<(dyn Iterator<Item = i32> + 'static)>> {
-    let v = vec![Either::Right(1), Either::Left(2)];
-    ((box v.into_iter()) as Box<dyn Iterator<Item = Either<i32, i32>>>)
-        .sequence()
 }
 
 fn vec_either_traverse() -> Either<i32, Vec<i32>> {
