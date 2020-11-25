@@ -51,100 +51,50 @@ impl AssociativeFlatten for VectorFamily {
     }
 }
 impl AssociativeBoth for VectorFamily {
-    fn both<A, B>(fa: Vec<A>, fb: Vec<B>) -> Self::Member<(A, B)> {
-        Iterator::zip(fa.into_iter(), fb.into_iter()).collect()
+    fn both<A: Clone, B: Clone>(
+        fa: Vec<A>,
+        fb: Vec<B>,
+    ) -> Self::Member<(A, B)> {
+        fa.flat_map(move |a| fb.clone().map(move |b| (a.clone(), b)))
+    }
+}
+impl IdentityBoth for VectorFamily {
+    fn any() -> Self::Member<()> {
+        vec![()]
     }
 }
 impl Traversable for VectorFamily {
-    fn foreach<
-        App: Applicative,
-        A: 'static,
-        B: Clone + 'static,
-        F: FnMut(A) -> App::Member<B>,
-    >(
-        fa: Self::Member<A>,
+    fn foreach<App: Applicative, A, B: Clone, F: FnMut(A) -> App::Member<B>>(
+        fa: Vec<A>,
         mut f: F,
-    ) -> App::Member<Self::Member<B>> {
-        let acc: Vec<B> = Vec::new();
-        let init = App::pure(acc);
+    ) -> App::Member<Vec<B>> {
+        let init = App::pure(Vec::new());
         let result = fa.into_iter().fold(init, move |app_acc, a| {
             let app_b = f(a);
-            App::both(app_acc, app_b).map(move |(mut acc, b)| {
-                acc.push(b);
-                acc
-            })
+            App::both(app_acc.as_member(), app_b.as_member()).map(
+                |(mut acc, b)| {
+                    acc.push(b);
+                    acc
+                },
+            )
         });
         result
     }
 }
 
-// iterator
-impl<T> Mirror for Box<dyn Iterator<Item = T>> {
-    type Family = IteratorBoxFamily;
-    type T = T;
-
-    fn as_member(self) -> <Self::Family as Hkt>::Member<Self::T> {
-        self
-    }
-
-    fn as_member_(&self) -> &<Self::Family as Hkt>::Member<Self::T> {
-        self
-    }
-}
-pub struct IteratorBoxFamily;
-impl Hkt for IteratorBoxFamily {
-    type Member<T> = Box<dyn Iterator<Item = T>>;
-}
-impl Covariant for IteratorBoxFamily {
-    fn map<A: 'static, B, F: FnMut(A) -> B + 'static>(
-        fa: Box<dyn Iterator<Item = A>>,
-        f: F,
-    ) -> Box<dyn Iterator<Item = B>> {
-        box Iterator::map(fa, f)
-    }
-}
-impl AssociativeFlatten for IteratorBoxFamily {
-    fn flatten<A: 'static>(
-        ffa: Self::Member<Self::Member<A>>,
-    ) -> Self::Member<A> {
-        box Iterator::flatten(ffa)
-    }
-}
-impl AssociativeBoth for IteratorBoxFamily {
-    fn both<A: 'static, B: 'static>(
-        fa: Self::Member<A>,
-        fb: Self::Member<B>,
-    ) -> Self::Member<(A, B)> {
-        box Iterator::zip(fa, fb)
-    }
-}
-impl Traversable for IteratorBoxFamily {
-    fn foreach<
-        App: Applicative,
-        A: 'static,
-        B: Clone + 'static,
-        F: FnMut(A) -> App::Member<B> + 'static,
-    >(
-        fa: Self::Member<A>,
-        mut f: F,
-    ) -> App::Member<Self::Member<B>> {
-        let acc: Vec<B> = Vec::new();
-        let init = App::pure(acc);
-        let result = fa.fold(init, move |app_acc, a| {
-            let app_b = f(a);
-            App::both(app_acc, app_b).map(move |(mut acc, b)| {
-                acc.push(b);
-                acc
-            })
-        });
-        result.map(|v| (box v.into_iter()) as Box<dyn Iterator<Item = B>>)
-    }
-}
-
 // either
+#[derive(Eq, PartialEq, Debug)]
 pub enum Either<A, B> {
     Left(A),
     Right(B),
+}
+impl<A: Clone, B: Clone> Clone for Either<A, B> {
+    fn clone(&self) -> Self {
+        match self {
+            Either::Left(l) => Either::Left(l.clone()),
+            Either::Right(r) => Either::Right(r.clone()),
+        }
+    }
 }
 impl<L, R> Mirror for Either<L, R> {
     type Family = EitherFamily<L>;
@@ -216,7 +166,7 @@ impl<L> AssociativeBoth for EitherFamily<L> {
     }
 }
 impl<L> AssociativeEither for EitherFamily<L> {
-    fn either<A: 'static, B: 'static>(
+    fn either<A, B>(
         fa: Either<L, A>,
         fb: Either<L, B>,
     ) -> Either<L, Either<A, B>> {
@@ -232,13 +182,8 @@ impl<L> IdentityBoth for EitherFamily<L> {
         Either::Right(())
     }
 }
-impl<L: Clone + 'static> Traversable for EitherFamily<L> {
-    fn foreach<
-        App: Applicative,
-        A,
-        B: 'static,
-        F: FnMut(A) -> App::Member<B>,
-    >(
+impl<L: Clone> Traversable for EitherFamily<L> {
+    fn foreach<App: Applicative, A, B, F: FnMut(A) -> App::Member<B>>(
         fa: Self::Member<A>,
         mut f: F,
     ) -> App::Member<Self::Member<B>> {
@@ -252,13 +197,7 @@ impl Hkt2 for EitherFamily2 {
     type Member<A, B> = Either<A, B>;
 }
 impl RightCovariant for EitherFamily2 {
-    fn right_map<
-        'c,
-        A: 'static,
-        B: 'static,
-        C: 'c,
-        F: FnMut(B) -> C + 'static,
-    >(
+    fn right_map<A, B, C, F: FnMut(B) -> C>(
         ab: Self::Member<A, B>,
         f: F,
     ) -> Self::Member<A, C> {
@@ -266,15 +205,7 @@ impl RightCovariant for EitherFamily2 {
     }
 }
 impl BiFunctor for EitherFamily2 {
-    fn bimap<
-        'output,
-        A: 'static,
-        B: 'static,
-        C: 'output,
-        D: 'output,
-        F: FnMut(A) -> C + 'static,
-        G: FnMut(B) -> D + 'static,
-    >(
+    fn bimap<A, B, C, D, F: FnMut(A) -> C, G: FnMut(B) -> D>(
         ab: Self::Member<A, B>,
         mut f: F,
         mut g: G,
@@ -286,15 +217,41 @@ impl BiFunctor for EitherFamily2 {
     }
 }
 
-// examples
-fn iter_either_traverse(
-) -> Either<i32, Box<(dyn Iterator<Item = i32> + 'static)>> {
-    let v = vec![Either::Right(1), Either::Left(2)];
-    ((box v.into_iter()) as Box<dyn Iterator<Item = Either<i32, i32>>>)
-        .sequence()
-}
-
 fn vec_either_traverse() -> Either<i32, Vec<i32>> {
     let v = vec![Either::Right(1), Either::Left(2)];
     v.sequence()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::traversable::*;
+    #[test]
+    fn test_1() {
+        let a = vec![vec![1, 2], vec![3, 4], vec![5, 6]].sequence();
+        assert_eq!(
+            a,
+            vec![
+                vec![1, 3, 5],
+                vec![1, 3, 6],
+                vec![1, 4, 5],
+                vec![1, 4, 6],
+                vec![2, 3, 5],
+                vec![2, 3, 6],
+                vec![2, 4, 5],
+                vec![2, 4, 6]
+            ] as Vec<Vec<i32>>
+        )
+    }
+    #[test]
+    fn test_2() {
+        let v = vec![Either::Right(1), Either::Left(2)].sequence();
+        assert_eq!(v, Either::Left(2))
+    }
+    #[test]
+    fn test_3() {
+        let v: Either<i32, Vec<i32>> =
+            vec![Either::Right(1), Either::Right(2)].sequence();
+        assert_eq!(v, Either::Right(vec![1, 2]))
+    }
 }

@@ -1,6 +1,6 @@
 use super::hkt::*;
 pub trait Contravariant<'a>: Hkt<'a> {
-    fn map<A: 'a, B: 'a, F: FnMut(B) -> A + 'a>(
+    fn map<A, B, F: FnMut(B) -> A>(
         fa: Self::Member<A>,
         f: F,
     ) -> Self::Member<B>;
