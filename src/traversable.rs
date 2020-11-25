@@ -7,14 +7,14 @@ pub trait Traversable: Covariant {
     ) -> App::Member<Self::Member<B>>;
 }
 
-pub trait TraverseSyntax<Tr: Traversable, A>:
+pub trait TraverseSyntax<Tr: Traversable, A: Clone>:
     Mirror<Family = Tr, T = A>
 {
     fn traverse<
         App: Applicative,
         B: Clone,
-        AppB: Mirror<Family = App, T = B>,
-        F: FnMut(Self::T) -> AppB + 'static,
+        AppB: Mirror<Family = App, T = B> + Clone,
+        F: FnMut(Self::T) -> AppB,
     >(
         self,
         mut f: F,
@@ -22,8 +22,8 @@ pub trait TraverseSyntax<Tr: Traversable, A>:
         Tr::foreach::<App, _, _, _>(self.as_member(), move |t| f(t).as_member())
     }
 }
-impl<F: Traversable, A, T: Mirror<Family = F, T = A>> TraverseSyntax<F, A>
-    for T
+impl<F: Traversable, A: Clone, T: Mirror<Family = F, T = A>>
+    TraverseSyntax<F, A> for T
 {
 }
 
@@ -31,7 +31,7 @@ pub trait SequenceSyntax<
     App: Applicative,
     Tr: Traversable,
     A: Clone,
-    AppA: Mirror<Family = App, T = A>,
+    AppA: Mirror<Family = App, T = A> + Clone,
 >: Mirror<Family = Tr, T = AppA>
 {
     fn sequence(self) -> App::Member<Tr::Member<A>> {
@@ -42,7 +42,7 @@ impl<
         App: Applicative,
         Tr: Traversable,
         A: Clone,
-        AppA: Mirror<Family = App, T = A>,
+        AppA: Mirror<Family = App, T = A> + Clone,
         TrAppA: Mirror<Family = Tr, T = AppA>,
     > SequenceSyntax<App, Tr, A, AppA> for TrAppA
 {

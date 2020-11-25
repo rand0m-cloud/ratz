@@ -51,31 +51,50 @@ impl AssociativeFlatten for VectorFamily {
     }
 }
 impl AssociativeBoth for VectorFamily {
-    fn both<A, B>(fa: Vec<A>, fb: Vec<B>) -> Self::Member<(A, B)> {
-        Iterator::zip(fa.into_iter(), fb.into_iter()).collect()
+    fn both<A: Clone, B: Clone>(
+        fa: Vec<A>,
+        fb: Vec<B>,
+    ) -> Self::Member<(A, B)> {
+        fa.flat_map(move |a| fb.clone().map(move |b| (a.clone(), b)))
+    }
+}
+impl IdentityBoth for VectorFamily {
+    fn any() -> Self::Member<()> {
+        vec![()]
     }
 }
 impl Traversable for VectorFamily {
     fn foreach<App: Applicative, A, B: Clone, F: FnMut(A) -> App::Member<B>>(
-        fa: Self::Member<A>,
+        fa: Vec<A>,
         mut f: F,
-    ) -> App::Member<Self::Member<B>> {
+    ) -> App::Member<Vec<B>> {
         let init = App::pure(Vec::new());
         let result = fa.into_iter().fold(init, move |app_acc, a| {
             let app_b = f(a);
-            App::both(app_acc, app_b).map(|(mut acc, b)| {
-                acc.push(b);
-                acc
-            })
+            App::both(app_acc.as_member(), app_b.as_member()).map(
+                |(mut acc, b)| {
+                    acc.push(b);
+                    acc
+                },
+            )
         });
         result
     }
 }
 
 // either
+#[derive(Eq, PartialEq, Debug)]
 pub enum Either<A, B> {
     Left(A),
     Right(B),
+}
+impl<A: Clone, B: Clone> Clone for Either<A, B> {
+    fn clone(&self) -> Self {
+        match self {
+            Either::Left(l) => Either::Left(l.clone()),
+            Either::Right(r) => Either::Right(r.clone()),
+        }
+    }
 }
 impl<L, R> Mirror for Either<L, R> {
     type Family = EitherFamily<L>;
@@ -201,4 +220,38 @@ impl BiFunctor for EitherFamily2 {
 fn vec_either_traverse() -> Either<i32, Vec<i32>> {
     let v = vec![Either::Right(1), Either::Left(2)];
     v.sequence()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::traversable::*;
+    #[test]
+    fn test_1() {
+        let a = vec![vec![1, 2], vec![3, 4], vec![5, 6]].sequence();
+        assert_eq!(
+            a,
+            vec![
+                vec![1, 3, 5],
+                vec![1, 3, 6],
+                vec![1, 4, 5],
+                vec![1, 4, 6],
+                vec![2, 3, 5],
+                vec![2, 3, 6],
+                vec![2, 4, 5],
+                vec![2, 4, 6]
+            ] as Vec<Vec<i32>>
+        )
+    }
+    #[test]
+    fn test_2() {
+        let v = vec![Either::Right(1), Either::Left(2)].sequence();
+        assert_eq!(v, Either::Left(2))
+    }
+    #[test]
+    fn test_3() {
+        let v: Either<i32, Vec<i32>> =
+            vec![Either::Right(1), Either::Right(2)].sequence();
+        assert_eq!(v, Either::Right(vec![1, 2]))
+    }
 }
