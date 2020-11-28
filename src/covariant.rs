@@ -5,13 +5,6 @@ pub trait Covariant: Hkt {
         f: F,
     ) -> Self::Member<B>;
 }
-pub trait CovariantClone: Covariant {
-    fn map_<A, B, F: FnMut(&A) -> B>(
-        fa: &Self::Member<A>,
-        f: F,
-    ) -> Self::Member<B>;
-}
-
 pub trait CovariantSyntax<Cov: Covariant, A>:
     Mirror<T = A, Family = Cov>
 {
@@ -22,18 +15,5 @@ pub trait CovariantSyntax<Cov: Covariant, A>:
 
 impl<F: Covariant, A, T: Mirror<T = A, Family = F>> CovariantSyntax<F, A>
     for T
-{
-}
-
-pub trait CovariantCloneSyntax<Cov: CovariantClone, A>:
-    Mirror<T = A, Family = Cov>
-{
-    fn map_<B, F: FnMut(&Self::T) -> B>(&self, f: F) -> Cov::Member<B> {
-        Cov::map_(self.as_member_(), f)
-    }
-}
-
-impl<F: CovariantClone, A, T: Mirror<T = A, Family = F>>
-    CovariantCloneSyntax<F, A> for T
 {
 }

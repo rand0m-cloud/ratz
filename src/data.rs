@@ -39,18 +39,6 @@ impl Covariant for VectorFamily {
         acc
     }
 }
-impl CovariantClone for VectorFamily {
-    fn map_<A, B, F: FnMut(&A) -> B>(
-        fa: &Self::Member<A>,
-        mut f: F,
-    ) -> Self::Member<B> {
-        let mut acc = Vec::new();
-        for a in fa {
-            acc.push(f(a));
-        }
-        acc
-    }
-}
 impl AssociativeFlatten for VectorFamily {
     fn flatten<A>(ffa: Vec<Vec<A>>) -> Vec<A> {
         let mut acc = Vec::new();
@@ -93,31 +81,6 @@ impl Traversable for VectorFamily {
         result
     }
 }
-// impl TraversableClone for VectorFamily {
-//     fn foreach_<
-//         'a,
-//         'b: 'a,
-//         App: Applicative + 'b,
-//         A: 'a,
-//         B: Clone + 'b,
-//         F: FnMut(&'a A) -> &'b App::Member<B>,
-//     >(
-//         fa: &'a Self::Member<A>,
-//         mut f: F,
-//     ) -> App::Member<Self::Member<B>> {
-//         let init = App::pure(Vec::new());
-//         let result = fa.into_iter().fold(init, move |app_acc, a| {
-//             let app_b = f(a);
-//             App::both(app_acc.as_member(), (*app_b).clone()).map(
-//                 |(mut acc, b)| {
-//                     acc.push(b);
-//                     acc
-//                 },
-//             )
-//         });
-//         result
-//     }
-// }
 
 // either
 #[derive(Eq, PartialEq, Debug)]
@@ -168,17 +131,6 @@ impl<L> Covariant for EitherFamily<L> {
     fn map<A, B, F: FnMut(A) -> B>(fa: Either<L, A>, mut f: F) -> Either<L, B> {
         match fa {
             Either::Left(a) => Either::Left(a),
-            Either::Right(b) => Either::Right(f(b)),
-        }
-    }
-}
-impl<L: Clone> CovariantClone for EitherFamily<L> {
-    fn map_<A, B, F: FnMut(&A) -> B>(
-        fa: &Either<L, A>,
-        mut f: F,
-    ) -> Either<L, B> {
-        match fa {
-            Either::Left(a) => Either::Left(a.clone()),
             Either::Right(b) => Either::Right(f(b)),
         }
     }
@@ -252,11 +204,6 @@ impl BiFunctor for EitherFamily2 {
             Either::Right(r) => Either::Right(g(r)),
         }
     }
-}
-
-fn vec_either_traverse() -> Either<i32, Vec<i32>> {
-    let v = vec![Either::Right(1), Either::Left(2)];
-    v.sequence()
 }
 
 #[cfg(test)]
