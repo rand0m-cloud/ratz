@@ -1,7 +1,7 @@
 use super::{covariant::*, derived::applicative::*, hkt::*};
 
 pub trait Traversable: Covariant {
-    fn foreach<App: Applicative, A, B: Clone, F: FnMut(A) -> App::Member<B>>(
+    fn foreach<App: Applicative, A, B: Clone, F: Fn(A) -> App::Member<B>>(
         fa: Self::Member<A>,
         f: F,
     ) -> App::Member<Self::Member<B>>;
@@ -14,10 +14,10 @@ pub trait TraverseSyntax<Tr: Traversable, A>:
         App: Applicative,
         B: Clone,
         AppB: Mirror<Family = App, T = B>,
-        F: FnMut(Self::T) -> AppB,
+        F: Fn(Self::T) -> AppB,
     >(
         self,
-        mut f: F,
+        f: F,
     ) -> App::Member<Tr::Member<B>> {
         Tr::foreach::<App, _, _, _>(self.as_member(), move |t| f(t).as_member())
     }

@@ -1,7 +1,7 @@
 use crate::{associative_flatten::*, covariant::*, hkt::*};
 
 pub trait Monad: AssociativeFlatten + Covariant {
-    fn flat_map<A, B, F: FnMut(A) -> Self::Member<B>>(
+    fn flat_map<A, B, F: Fn(A) -> Self::Member<B>>(
         fa: Self::Member<A>,
         f: F,
     ) -> Self::Member<B> {
@@ -11,7 +11,7 @@ pub trait Monad: AssociativeFlatten + Covariant {
 impl<T: AssociativeFlatten + Covariant> Monad for T {}
 
 pub trait MonadSyntax<Mon: Monad, A>: Mirror<T = A, Family = Mon> {
-    fn flat_map<B, F: FnMut(Self::T) -> Mon::Member<B>>(
+    fn flat_map<B, F: Fn(Self::T) -> Mon::Member<B>>(
         self,
         f: F,
     ) -> Mon::Member<B> {

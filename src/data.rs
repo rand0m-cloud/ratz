@@ -28,7 +28,7 @@ impl Hkt for OptionFamily {
     type Member<T> = Option<T>;
 }
 impl Covariant for OptionFamily {
-    fn map<A, B, F: FnMut(A) -> B>(fa: Option<A>, f: F) -> Option<B> {
+    fn map<A, B, F: Fn(A) -> B>(fa: Option<A>, f: F) -> Option<B> {
         fa.map(f)
     }
 }
@@ -57,7 +57,7 @@ impl Hkt for VectorFamily {
     type Member<T> = Vec<T>;
 }
 impl Covariant for VectorFamily {
-    fn map<A, B, F: FnMut(A) -> B>(fa: Vec<A>, mut f: F) -> Vec<B> {
+    fn map<A, B, F: Fn(A) -> B>(fa: Vec<A>, f: F) -> Vec<B> {
         let mut acc = Vec::new();
         for a in fa {
             acc.push(f(a));
@@ -90,15 +90,15 @@ impl IdentityBoth for VectorFamily {
     }
 }
 impl Traversable for VectorFamily {
-    fn foreach<App: Applicative, A, B: Clone, F: FnMut(A) -> App::Member<B>>(
+    fn foreach<App: Applicative, A, B: Clone, F: Fn(A) -> App::Member<B>>(
         fa: Vec<A>,
-        mut f: F,
+        f: F,
     ) -> App::Member<Vec<B>> {
         let init = App::pure(Vec::new());
         let result = fa.into_iter().fold(init, move |app_acc, a| {
             let app_b = f(a);
             App::both(app_acc.as_member(), app_b.as_member()).map(
-                |(mut acc, b)| {
+                move |(mut acc, b)| {
                     acc.push(b);
                     acc
                 },
@@ -138,19 +138,14 @@ impl<L, R> Mirror2 for Either<L, R> {
     fn as_member(self) -> <Self::Family as Hkt2>::Member<Self::A, Self::B> {
         self
     }
-
-    fn as_member_(&self) -> &<Self::Family as Hkt2>::Member<Self::A, Self::B> {
-        self
-    }
 }
 
 pub struct EitherFamily<L>(PhantomData<L>);
 impl<L> Hkt for EitherFamily<L> {
     type Member<R> = Either<L, R>;
 }
-pub struct EitherFamily2;
 impl<L> Covariant for EitherFamily<L> {
-    fn map<A, B, F: FnMut(A) -> B>(fa: Either<L, A>, mut f: F) -> Either<L, B> {
+    fn map<A, B, F: Fn(A) -> B>(fa: Either<L, A>, f: F) -> Either<L, B> {
         match fa {
             Either::Left(a) => Either::Left(a),
             Either::Right(b) => Either::Right(f(b)),
@@ -194,9 +189,9 @@ impl<L> IdentityBoth for EitherFamily<L> {
     }
 }
 impl<L: Clone> Traversable for EitherFamily<L> {
-    fn foreach<App: Applicative, A, B, F: FnMut(A) -> App::Member<B>>(
+    fn foreach<App: Applicative, A, B, F: Fn(A) -> App::Member<B>>(
         fa: Self::Member<A>,
-        mut f: F,
+        f: F,
     ) -> App::Member<Self::Member<B>> {
         match fa {
             Either::Left(l) => App::pure(l).map(move |l| Either::Left(l)),
@@ -204,11 +199,12 @@ impl<L: Clone> Traversable for EitherFamily<L> {
         }
     }
 }
+pub struct EitherFamily2;
 impl Hkt2 for EitherFamily2 {
     type Member<A, B> = Either<A, B>;
 }
 impl RightCovariant for EitherFamily2 {
-    fn right_map<A, B, C, F: FnMut(B) -> C>(
+    fn right_map<A, B, C, F: Fn(B) -> C>(
         ab: Self::Member<A, B>,
         f: F,
     ) -> Self::Member<A, C> {
@@ -216,10 +212,10 @@ impl RightCovariant for EitherFamily2 {
     }
 }
 impl BiFunctor for EitherFamily2 {
-    fn bimap<A, B, C, D, F: FnMut(A) -> C, G: FnMut(B) -> D>(
+    fn bimap<A, B, C, D, F: Fn(A) -> C, G: Fn(B) -> D>(
         ab: Self::Member<A, B>,
-        mut f: F,
-        mut g: G,
+        f: F,
+        g: G,
     ) -> Self::Member<C, D> {
         match ab {
             Either::Left(l) => Either::Left(f(l)),
@@ -231,7 +227,6 @@ impl BiFunctor for EitherFamily2 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::traversable::*;
     #[test]
     fn test_1() {
         let a = vec![vec![1, 2], vec![3, 4], vec![5, 6]].sequence();

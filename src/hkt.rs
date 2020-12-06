@@ -17,5 +17,4 @@ pub trait Mirror2: Sized {
     type B;
     type Family: Hkt2;
     fn as_member(self) -> <Self::Family as Hkt2>::Member<Self::A, Self::B>;
-    fn as_member_(&self) -> &<Self::Family as Hkt2>::Member<Self::A, Self::B>;
 }
