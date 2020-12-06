@@ -1,5 +1,5 @@
 use super::associative_either::AssociativeEither;
 
-pub trait IdentityBoth: AssociativeBoth<'a> {
+pub trait IdentityEither: AssociativeEither {
     fn none() -> Self::Member<!>;
 }

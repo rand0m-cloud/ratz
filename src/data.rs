@@ -8,10 +8,40 @@ use super::{
     derived::{applicative::*, monad::*},
     hkt::*,
     identity_both::*,
+    identity_either::*,
     right_covariant::*,
     traversable::*,
 };
 use std::marker::PhantomData;
+
+// option
+impl<T> Mirror for Option<T> {
+    type Family = OptionFamily;
+    type T = T;
+
+    fn as_member(self) -> <Self::Family as Hkt>::Member<Self::T> {
+        self
+    }
+}
+pub struct OptionFamily;
+impl Hkt for OptionFamily {
+    type Member<T> = Option<T>;
+}
+impl Covariant for OptionFamily {
+    fn map<A, B, F: FnMut(A) -> B>(fa: Option<A>, f: F) -> Option<B> {
+        fa.map(f)
+    }
+}
+impl AssociativeEither for OptionFamily {
+    fn either<A, B>(fa: Option<A>, fb: Option<B>) -> Option<Either<A, B>> {
+        fa.map(Either::Left).or_else(|| fb.map(Either::Right))
+    }
+}
+impl IdentityEither for OptionFamily {
+    fn none() -> Self::Member<!> {
+        None
+    }
+}
 
 // vec
 impl<T> Mirror for Vec<T> {
@@ -19,10 +49,6 @@ impl<T> Mirror for Vec<T> {
     type T = T;
 
     fn as_member(self) -> <Self::Family as Hkt>::Member<Self::T> {
-        self
-    }
-
-    fn as_member_(&self) -> &<Self::Family as Hkt>::Member<Self::T> {
         self
     }
 }
@@ -101,10 +127,6 @@ impl<L, R> Mirror for Either<L, R> {
     type T = R;
 
     fn as_member(self) -> Either<L, R> {
-        self
-    }
-
-    fn as_member_(&self) -> &Either<L, R> {
         self
     }
 }
@@ -237,5 +259,15 @@ mod tests {
         let v: Either<i32, Vec<i32>> =
             vec![Either::Right(1), Either::Right(2)].sequence();
         assert_eq!(v, Either::Right(vec![1, 2]))
+    }
+    #[test]
+    fn test_assoc_either() {
+        let v = OptionFamily::either(Some(1), OptionFamily::none());
+        let v = match v {
+            Some(Either::Left(i)) => Some(i),
+            None => None,
+            Some(Either::Right(void)) => void,
+        };
+        assert_eq!(v, Some(1));
     }
 }
