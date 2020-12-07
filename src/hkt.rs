@@ -2,7 +2,7 @@ pub trait Hkt {
     type Member<T>: Mirror<T = T, Family = Self>;
 }
 
-pub trait Mirror: Sized {
+pub trait Mirror {
     type T;
     type Family: Hkt;
     fn as_member(self) -> <Self::Family as Hkt>::Member<Self::T>;
