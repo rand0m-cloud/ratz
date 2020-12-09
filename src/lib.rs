@@ -10,7 +10,6 @@ mod commutative;
 mod covariant;
 mod data;
 mod derived;
-mod foo;
 mod hkt;
 mod idempotent;
 mod identity;

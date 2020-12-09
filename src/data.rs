@@ -90,7 +90,7 @@ impl IdentityBoth for VectorFamily {
     }
 }
 impl Traversable for VectorFamily {
-    fn foreach<App: Applicative, A, B: Clone, F: Fn(A) -> App::Member<B>>(
+    fn traverse<App: Applicative, A, B: Clone, F: Fn(A) -> App::Member<B>>(
         fa: Vec<A>,
         f: F,
     ) -> App::Member<Vec<B>> {
@@ -189,7 +189,7 @@ impl<L> IdentityBoth for EitherFamily<L> {
     }
 }
 impl<L: Clone> Traversable for EitherFamily<L> {
-    fn foreach<App: Applicative, A, B, F: Fn(A) -> App::Member<B>>(
+    fn traverse<App: Applicative, A, B, F: Fn(A) -> App::Member<B>>(
         fa: Self::Member<A>,
         f: F,
     ) -> App::Member<Self::Member<B>> {
