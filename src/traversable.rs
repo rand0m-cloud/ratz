@@ -7,7 +7,7 @@ pub trait Traversable: Covariant {
     ) -> App::Member<Self::Member<B>>;
 }
 
-pub trait TraverseSyntax: Mirror + Sized
+pub trait TraversableExt: Mirror + Sized
 where
     Self::Family: Traversable,
 {
@@ -25,8 +25,9 @@ where
         )
     }
 }
-impl<F: Traversable, T: Mirror<Family = F>> TraverseSyntax for T {}
-pub trait SequenceSyntax: Mirror + Sized
+impl<F: Traversable, T: Mirror<Family = F>> TraversableExt for T {}
+
+pub trait SequenceExt: Mirror + Sized
 where
     Self::Family: Traversable,
     Self::T: Mirror,
@@ -47,6 +48,6 @@ impl<
         A: Clone,
         AppA: Mirror<Family = App, T = A>,
         TrAppA: Mirror<Family = Tr, T = AppA>,
-    > SequenceSyntax for TrAppA
+    > SequenceExt for TrAppA
 {
 }

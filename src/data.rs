@@ -227,6 +227,7 @@ impl BiFunctor for EitherFamily2 {
 #[cfg(test)]
 mod tests {
     use super::*;
+
     #[test]
     fn test_1() {
         let a = vec![vec![1, 2], vec![3, 4], vec![5, 6]].sequence();

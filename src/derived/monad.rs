@@ -10,14 +10,16 @@ pub trait Monad: AssociativeFlatten + Covariant {
 }
 impl<T: AssociativeFlatten + Covariant> Monad for T {}
 
-pub trait MonadSyntax<Mon: Monad, A>:
-    Mirror<T = A, Family = Mon> + Sized
+pub trait MonadExt: Mirror + Sized
+where
+    Self::Family: Monad,
 {
-    fn flat_map<B, F: Fn(Self::T) -> Mon::Member<B>>(
+    fn flat_map<B, F: Fn(Self::T) -> <Self::Family as Hkt>::Member<B>>(
         self,
         f: F,
-    ) -> Mon::Member<B> {
-        Mon::flat_map::<Self::T, B, F>(self.as_member(), f)
+    ) -> <Self::Family as Hkt>::Member<B> {
+        <Self::Family as Monad>::flat_map(self.as_member(), f)
     }
 }
-impl<F: Monad, A, T: Mirror<Family = F, T = A>> MonadSyntax<F, A> for T {}
+
+impl<F: Monad, A, T: Mirror<Family = F, T = A>> MonadExt for T {}
