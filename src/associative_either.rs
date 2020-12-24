@@ -1,4 +1,4 @@
-use super::{data::*, hkt::*};
+use crate::dev::*;
 
 pub trait AssociativeEither: Hkt {
     fn either<A, B>(

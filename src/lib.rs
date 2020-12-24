@@ -20,3 +20,31 @@ mod inverse;
 mod profunctor;
 mod right_covariant;
 mod traversable;
+
+pub mod prelude {
+    pub use crate::{
+        associative::*,
+        associative_both::*,
+        associative_either::*,
+        associative_flatten::*,
+        bifunctor::*,
+        commutative::*,
+        covariant::*,
+        data::{option::*, vec::*},
+        derived::{applicative::*, monad::*},
+        hkt::*,
+        idempotent::*,
+        identity::*,
+        identity_both::*,
+        identity_either::*,
+        identity_flatten::*,
+        inverse::*,
+        profunctor::*,
+        right_covariant::*,
+        traversable::*,
+    };
+}
+
+pub mod dev {
+    pub use crate::{data::either::*, prelude::*};
+}

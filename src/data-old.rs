@@ -1,20 +1,7 @@
 // use super::{associative_flatten::*, covariant::*, derived::monad::*, hkt::*};
-use super::{
-    associative_both::*,
-    associative_either::*,
-    associative_flatten::*,
-    bifunctor::*,
-    covariant::*,
-    derived::{applicative::*, monad::*},
-    hkt::*,
-    identity_both::*,
-    identity_either::*,
-    right_covariant::*,
-    traversable::*,
-};
+use crate::dev::*;
 use std::marker::PhantomData;
 
-// option
 impl<T> Mirror for Option<T> {
     type Family = OptionFamily;
     type T = T;
@@ -245,6 +232,16 @@ mod tests {
             ] as Vec<Vec<i32>>
         )
     }
+
+    #[test]
+    fn test_maybe() {
+        let a = vec![Some(1), Some(2)].sequence();
+        assert_eq!(
+            a,
+            Some(vec![1, 2])
+        )
+    }
+
     #[test]
     fn test_2() {
         let v = vec![Either::Right(1), Either::Left(2)].sequence();
