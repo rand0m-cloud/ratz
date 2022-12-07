@@ -3,9 +3,16 @@ name = "ratz"
 version = "0.0.1"
 authors = ["Maxim Schuwalow <maxim.schuwalow@gmail.com>"]
 description = "Performant, convenient and idiomatic FP for Rust."
-license = "MIT OR Apache-2.0"
+license = "asl20"
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[package.metadata.nix]
+build = true
+systems = [
+  "aarch64-linux",
+  "aarch64-darwin",
+  "i686-linux",
+  "x86_64-darwin",
+  "x86_64-linux",
+]
 
-[dependencies]
