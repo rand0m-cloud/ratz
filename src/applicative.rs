@@ -7,7 +7,7 @@ pub trait Applicative: Functor {
 }
 
 pub trait ApplicativeSyntax<TC: Applicative, A>: Mirror1<Constructor = TC, A = A> {
-    fn zip<B: Clone>(self, fb: TC::Of<B>) -> TC::Of<(A, B)> {
+    fn zip<B>(self, fb: TC::Of<B>) -> TC::Of<(A, B)> {
         TC::zip(self.as_member(), fb)
     }
 }
