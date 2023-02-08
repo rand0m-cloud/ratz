@@ -2,14 +2,14 @@ use super::hkt::{Mirror1, TypeConstructor1};
 use super::Monoid;
 
 pub trait Foldable: TypeConstructor1 {
-  fn fold<A, S, F: Fn(S, A) -> S>(fa: Self::Of<A>, initial: S, f: F) -> S;
+  fn fold<A, S, F: Fn(S, A) -> S>(fa: Self::K<A>, initial: S, f: F) -> S;
 }
 
 pub trait FoldableSyntax<TC: Foldable, A>:
   Mirror1<Constructor = TC, A = A>
 {
   fn fold<S, F: Fn(S, A) -> S>(self, initial: S, f: F) -> S {
-    TC::fold(self.as_member(), initial, f)
+    TC::fold(self.reify(), initial, f)
   }
 
   fn fold_map<B: Monoid, F: Fn(A) -> B>(self, f: F) -> B {

@@ -2,20 +2,20 @@ use super::hkt::Mirror1;
 use super::{Applicative, Foldable, Functor};
 
 pub trait Traversable: Functor + Foldable {
-  fn traverse<App: Applicative, A, B, F: Fn(A) -> App::Of<B>>(
-    fa: Self::Of<A>,
+  fn traverse<App: Applicative, A, B, F: Fn(A) -> App::K<B>>(
+    fa: Self::K<A>,
     f: F,
-  ) -> App::Of<Self::Of<B>>;
+  ) -> App::K<Self::K<B>>;
 }
 
 pub trait TraversableSyntax<TC: Traversable, A>:
   Mirror1<Constructor = TC, A = A>
 {
-  fn traverse<App: Applicative, B, F: Fn(A) -> App::Of<B>>(
+  fn traverse<App: Applicative, B, F: Fn(A) -> App::K<B>>(
     self,
     f: F,
-  ) -> App::Of<TC::Of<B>> {
-    TC::traverse::<App, A, B, F>(self.as_member(), f)
+  ) -> App::K<TC::K<B>> {
+    TC::traverse::<App, A, B, F>(self.reify(), f)
   }
 }
 

@@ -11,7 +11,7 @@ impl<A> Mirror1 for Option<A> {
 pub struct OptionFamily;
 
 impl TypeConstructor1 for OptionFamily {
-  type Of<A> = Option<A>;
+  type K<A> = Option<A>;
 }
 
 impl Functor for OptionFamily {
@@ -46,10 +46,10 @@ impl Foldable for OptionFamily {
 }
 
 impl Traversable for OptionFamily {
-  fn traverse<App: Applicative, A, B, F: Fn(A) -> App::Of<B>>(
+  fn traverse<App: Applicative, A, B, F: Fn(A) -> App::K<B>>(
     fa: Option<A>,
     f: F,
-  ) -> App::Of<Option<B>> {
+  ) -> App::K<Option<B>> {
     match fa {
       None => App::pure(None),
       Some(a) => f(a).map(Some),
