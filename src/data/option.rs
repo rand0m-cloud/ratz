@@ -4,9 +4,8 @@ use crate::hkt::{Mirror1, TypeConstructor1};
 use crate::*;
 
 impl<A> Mirror1 for Option<A> {
-  type Constructor = OptionFamily;
-
   type A = A;
+  type Constructor = OptionFamily;
 }
 
 pub struct OptionFamily;
@@ -25,6 +24,7 @@ impl Applicative for OptionFamily {
   fn pure<A>(a: A) -> Option<A> {
     Some(a)
   }
+
   fn zip<A, B>(fa: Option<A>, fb: Option<B>) -> Option<(A, B)> {
     fa.zip(fb)
   }
