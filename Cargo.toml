@@ -1,10 +1,10 @@
 [package]
 name = "ratz"
 version = "0.0.1"
-authors = ["Maxim Schuwalow <maxim.schuwalow@gmail.com>"]
-description = "Performant, convenient and idiomatic FP for Rust."
+authors = ["Maxim Schuwalow <maxim.schuwalow@gmail.com>", "Narek Asadorian <narek.asadorian@gmail.com>"]
+description = "Performant, convenient, and idiomatic FP for Rust."
 license = "asl20"
-edition = "2018"
+edition = "2021"
 
 [package.metadata.nix]
 build = true
