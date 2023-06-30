@@ -18,19 +18,19 @@ impl<'a, A, B> Thunk<'a, A, B> {
 }
 pub struct State<S, T>(Thunk<'static, S, (S, T)>);
 
-impl<S, A> Mirror1 for State<S, A> {
+impl<S: 'static, A: 'static> Mirror1 for State<S, A> {
   type A = A;
   type Constructor = StateFamily<S>;
 }
 
 pub struct StateFamily<S>(PhantomData<S>);
 
-impl<S> TypeConstructor1 for StateFamily<S> {
-  type K<A> = State<S, A>;
+impl<S: 'static> TypeConstructor1 for StateFamily<S> {
+  type K<A: 'static> = State<S, A>;
 }
 
 impl<S: 'static> Functor for StateFamily<S> {
-  fn map<A: 'static, B, F: Fn(A) -> B + 'static>(
+  fn map<A: 'static, B: 'static, F: Fn(A) -> B + 'static>(
     fa: Self::K<A>,
     f: F,
   ) -> Self::K<B> {
@@ -125,6 +125,7 @@ fn main() {
     },
     atm(),
   );
+  test_transformer();
 }
 
 pub mod example {
@@ -186,4 +187,109 @@ pub mod example {
         StateFamily::pure(())
     }
   }
+}
+
+pub struct EnvT<M: TypeConstructor1, E, A: 'static>(
+  Thunk<'static, E, M::K<A>>,
+  PhantomData<M>,
+);
+
+pub struct EnvTFamily<M, E>(PhantomData<(M, E)>);
+
+impl<M: TypeConstructor1 + 'static, E: 'static> TypeConstructor1
+  for EnvTFamily<M, E>
+{
+  type K<A: 'static> = EnvT<M, E, A>;
+}
+
+impl<M: TypeConstructor1 + 'static, E: 'static, A: 'static> Mirror1
+  for EnvT<M, E, A>
+{
+  type A = A;
+  type Constructor = EnvTFamily<M, E>;
+}
+
+impl<M: TypeConstructor1 + Functor + 'static, E: 'static> Functor
+  for EnvTFamily<M, E>
+{
+  fn map<A: 'static, B: 'static, F: Fn(A) -> B + 'static>(
+    fa: EnvT<M, E, A>,
+    f: F,
+  ) -> EnvT<M, E, B> {
+    EnvT(
+      Thunk::new(move |env| {
+        let a = fa.0.call(env);
+        a.map(f)
+      }),
+      PhantomData,
+    )
+  }
+}
+
+impl<M: TypeConstructor1 + Functor + Applicative + 'static, E: 'static>
+  Applicative for EnvTFamily<M, E>
+{
+  fn pure<A: 'static>(a: A) -> EnvT<M, E, A> {
+    EnvT(Thunk::new(move |_| M::pure(a)), PhantomData)
+  }
+
+  fn zip<A: 'static, B: 'static>(
+    fa: Self::K<A>,
+    fb: Self::K<B>,
+  ) -> Self::K<(A, B)> {
+    EnvT(Thunk::new(move |env| fa.zip(fb).0.call(env)), PhantomData)
+  }
+}
+
+impl<
+    M: TypeConstructor1 + Functor + Applicative + Monad + 'static,
+    E: 'static + Clone,
+  > Monad for EnvTFamily<M, E>
+{
+  fn flat_map<A: 'static, B: 'static, F: Fn(A) -> Self::K<B> + 'static>(
+    fa: Self::K<A>,
+    f: F,
+  ) -> Self::K<B> {
+    EnvT(
+      Thunk::new(move |env: E| {
+        fa.0
+          .call(env.clone())
+          .flat_map(move |a| f(a).0.call(env.clone()))
+      }),
+      PhantomData,
+    )
+  }
+}
+
+trait MonadTrans<M: TypeConstructor1>: TypeConstructor1 + Monad {
+  fn lift<A: 'static>(base: M::K<A>) -> Self::K<A>;
+}
+
+impl<M: TypeConstructor1 + Monad + 'static, E: 'static + Clone> MonadTrans<M>
+  for EnvTFamily<M, E>
+{
+  fn lift<A: 'static>(base: M::K<A>) -> EnvT<M, E, A> {
+    EnvT(Thunk::new(move |_| base), PhantomData)
+  }
+}
+
+fn get_env<M: TypeConstructor1 + Monad, S>() -> EnvT<M, S, S> {
+  EnvT(Thunk::new(|state| M::pure(state)), PhantomData)
+}
+
+fn run_env_t<M: TypeConstructor1 + Monad, S, A>(
+  env: S,
+  m: EnvT<M, S, A>,
+) -> M::K<A> {
+  m.0.call(env)
+}
+
+fn test_transformer() {
+  let action: EnvT<StateFamily<String>, usize, _> = mdo! {
+      state <- EnvTFamily::lift(get());
+      env <- get_env();
+      _ = println!("got state: {state} and env: {env}");
+      EnvTFamily::pure(())
+  };
+  run_state("test state".to_string(), run_env_t(10000, action));
 }

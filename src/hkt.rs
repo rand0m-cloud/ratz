@@ -1,14 +1,14 @@
 // HKTs with one parameter
 
 pub trait TypeConstructor1 {
-  type K<A>: Mirror1<Constructor = Self, A = A>;
+  type K<A:'static>: Mirror1<Constructor = Self, A = A>+'static;
 }
 
 pub trait AppliedTypeConstructor1<A>: TypeConstructor1 {
   type Mirror: Mirror1<Constructor = Self, A = A>; // eventually use an associated type default here.
 }
 
-impl<F: TypeConstructor1, A> AppliedTypeConstructor1<A> for F {
+impl<F: TypeConstructor1, A:'static> AppliedTypeConstructor1<A> for F {
   type Mirror = Self::K<A>;
 }
 

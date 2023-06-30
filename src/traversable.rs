@@ -8,7 +8,7 @@ pub trait Traversable: Functor + Foldable {
   ) -> App::K<Self::K<B>>;
 }
 
-pub trait TraversableSyntax<TC: Traversable, A>:
+pub trait TraversableSyntax<TC: Traversable, A:'static>:
   Mirror1<Constructor = TC, A = A>
 {
   fn traverse<App: Applicative, B, F: Fn(A) -> App::K<B>>(
@@ -19,7 +19,7 @@ pub trait TraversableSyntax<TC: Traversable, A>:
   }
 }
 
-impl<F: Traversable, A, FA: Mirror1<Constructor = F, A = A>>
+impl<F: Traversable, A:'static, FA: Mirror1<Constructor = F, A = A>>
   TraversableSyntax<F, A> for FA
 {
 }
