@@ -6,6 +6,10 @@ description = "Performant, convenient, and idiomatic FP for Rust."
 license = "asl20"
 edition = "2021"
 
+[[bin]]
+path = "main.rs"
+name = "ratz"
+
 [package.metadata.nix]
 build = true
 systems = [

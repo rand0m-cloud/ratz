@@ -46,7 +46,7 @@ impl Foldable for OptionFamily {
 }
 
 impl Traversable for OptionFamily {
-  fn traverse<App: Applicative, A, B, F: Fn(A) -> App::K<B>>(
+  fn traverse<App: Applicative, A, B, F: Fn(A) -> App::K<B> + 'static>(
     fa: Option<A>,
     f: F,
   ) -> App::K<Option<B>> {
